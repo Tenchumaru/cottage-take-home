@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Documentation",
+    "prerequisites": []
+  },
+  {
+    "name": "City Comments",
+    "prerequisites": [ "Submission" ]
+  },
+  {
+    "name": "Submission",
+    "prerequisites": [ "Documentation" ]
+  }
+]

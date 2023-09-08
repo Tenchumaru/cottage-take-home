@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Design",
+    "prerequisites": []
+  },
+  {
+    "name": "Construction",
+    "prerequisites": [ "Permitting" ]
+  },
+  {
+    "name": "Permitting",
+    "prerequisites": [ "Design" ]
+  }
+]

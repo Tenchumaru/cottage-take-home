@@ -6,11 +6,17 @@ type Stage = {
   prerequisites: string[];
 };
 
-if (process.argv.length < 4) {
+console.log(process.argv);
+if (process.argv.length < 3) {
   console.error('no files provided');
+  process.exit(1);
+} else if (process.argv.length < 4) {
+  console.error('insufficient files provided');
+  process.exit(1);
 } else {
   main(process.argv.slice(2)).catch((err) => {
     console.error(err.message);
+    process.exit(1);
   });
 }
 
@@ -24,17 +30,23 @@ async function main(filePaths: string[]): Promise<void> {
   // Read and parse the contents of all files.
   const fileContents = await Promise.all(filePaths.map((filePath) => readFile(filePath, 'utf-8')));
 
-  // Create a dictionary mapping file titles to file contents.
-  const dict = filePaths.slice(0, filePaths.length).reduce((p, c, i) => {
-    p[basename(c, '.json').toLowerCase()] = JSON.parse(fileContents[i]) as Stage[];
+  // Pass the phase names and file contents to the processing function.
+  const phaseNames = filePaths.slice(0, filePaths.length).map((filePath) => basename(filePath, '.json').toLowerCase());
+  await processPhases(phaseNames, fileContents);
+}
+
+async function processPhases(phaseNames: string[], fileContents: string[]): Promise<void> {
+  // Create a dictionary mapping phase names to file contents.
+  const dict = fileContents.reduce((p, c, i) => {
+    p[phaseNames[i]] = JSON.parse(fileContents[i]) as Stage[];
     return p;
   }, {} as { [name: string]: Stage[] });
 
   // Ensure the phases match the file names ignoring case.
-  const phases = JSON.parse(await readFile(phasesFilePath, 'utf-8')) as Stage[];
-  if (phases.length !== filePaths.length - 1) {
+  const phases = dict['phases'];
+  if (phases.length !== phaseNames.length - 1) {
     throw new Error('invalid file count');
-  } else if (!phases.every((phase) => dict[phase.name.toLowerCase()] !== undefined)) {
+  } else if (phases.some((phase) => dict[phase.name.toLowerCase()] === undefined)) {
     throw new Error('missing phases');
   }
 

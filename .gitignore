@@ -2,6 +2,7 @@
 bin/
 node_modules/
 obj/
-*.js*
+*.js
+*.js.map
 *.sw[nop]
 *.user
