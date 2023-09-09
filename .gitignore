@@ -4,5 +4,6 @@ node_modules/
 obj/
 *.js
 *.js.map
+!babel.config.js
 *.sw[nop]
 *.user

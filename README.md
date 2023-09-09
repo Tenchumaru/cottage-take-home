@@ -9,28 +9,25 @@ are the names of the phases and correlates them ignoring case.
 
 ## Configure
 
-`npm i`
+Install [Node LTS](https://nodejs.org).
+Run `npm i`.
 
 ## Build
 
-`npm run build`
+Run `npm run build`.
 
 ## Run
 
-`node process-phases.js construction.json design.json permitting.json phases.json`
+Run `node process-phases.js construction.json design.json permitting.json phases.json`.
 
 ## Test
 
-`npm run test`
-
-Alternatively, run `./tesst` in a Bash prompt.
+Run `npm test`.
 
 ## Windows
 
 Node.js does not automatically expand command line arguments.  You must specify all arguments individually.
 
-To run the tests, run `./tesst` in a Bash prompt instead of running the NPM command.
-
 ## Development Time
 
-It took me about three hours, broken up by chores and lunch.
+It took me about three and a half hours, broken up by chores and lunch.

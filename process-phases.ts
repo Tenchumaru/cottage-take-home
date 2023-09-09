@@ -6,18 +6,19 @@ type Stage = {
   prerequisites: string[];
 };
 
-console.log(process.argv);
-if (process.argv.length < 3) {
-  console.error('no files provided');
-  process.exit(1);
-} else if (process.argv.length < 4) {
-  console.error('insufficient files provided');
-  process.exit(1);
-} else {
-  main(process.argv.slice(2)).catch((err) => {
-    console.error(err.message);
+if (process.env['NODE_ENV'] === undefined) {
+  if (process.argv.length < 3) {
+    console.error('no files provided');
     process.exit(1);
-  });
+  } else if (process.argv.length < 4) {
+    console.error('insufficient files provided');
+    process.exit(1);
+  } else {
+    main(process.argv.slice(2)).catch((err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
+  }
 }
 
 async function main(filePaths: string[]): Promise<void> {
@@ -31,21 +32,26 @@ async function main(filePaths: string[]): Promise<void> {
   const fileContents = await Promise.all(filePaths.map((filePath) => readFile(filePath, 'utf-8')));
 
   // Pass the phase names and file contents to the processing function.
-  const phaseNames = filePaths.slice(0, filePaths.length).map((filePath) => basename(filePath, '.json').toLowerCase());
-  await processPhases(phaseNames, fileContents);
+  const phaseNames = filePaths.map((filePath) => basename(filePath, '.json').toLowerCase());
+  const output = await processPhases(phaseNames, fileContents);
+  for (const line of output) {
+    console.log(line);
+  }
 }
 
-async function processPhases(phaseNames: string[], fileContents: string[]): Promise<void> {
+export async function processPhases(phaseNames: string[], fileContents: string[]): Promise<string[]> {
   // Create a dictionary mapping phase names to file contents.
-  const dict = fileContents.reduce((p, c, i) => {
+  const dict = fileContents.reduce((p, _c, i) => {
     p[phaseNames[i]] = JSON.parse(fileContents[i]) as Stage[];
     return p;
   }, {} as { [name: string]: Stage[] });
 
   // Ensure the phases match the file names ignoring case.
   const phases = dict['phases'];
-  if (phases.length !== phaseNames.length - 1) {
-    throw new Error('invalid file count');
+  if (phases === undefined) {
+    throw new Error('phases not found');
+  } else if (phases.length !== phaseNames.length - 1) {
+    throw new Error('argument counts differ');
   } else if (phases.some((phase) => dict[phase.name.toLowerCase()] === undefined)) {
     throw new Error('missing phases');
   }
@@ -61,14 +67,14 @@ async function processPhases(phaseNames: string[], fileContents: string[]): Prom
     validate(stages);
   });
 
-  // Print the phases and stages.
+  // Return the phases and stages.
+  const output: string[] = [];
   phases.forEach((phase, phaseIndex) => {
-    console.log(phaseIndex + 1, phase.name);
+    output.push(`${phaseIndex + 1} ${phase.name}`);
     const stages = dict[phase.name.toLowerCase()];
-    stages.forEach((stage, stageIndex) => {
-      console.log(`${phaseIndex + 1}.${stageIndex + 1}`, stage.name);
-    });
+    output.push(...stages.map((stage, stageIndex) => `${phaseIndex + 1}.${stageIndex + 1} ${stage.name}`));
   });
+  return output;
 
   // Compare two stages by checking their prerequisites.
   function compare(a: Stage, b: Stage): number {
